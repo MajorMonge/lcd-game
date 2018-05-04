@@ -91,18 +91,7 @@ public class Sheriff : LCDGameObject {
             sprite.Lit = false;
         }
 
-        switch (Position)
-        {
-            case Position.LEFT:
-                Sprites["SheriffLeft"].Lit = true;
-                break;
-            case Position.MIDDLE:
-                Sprites["SheriffMiddle"].Lit = true;
-                break;
-            case Position.RIGHT:
-                Sprites["SheriffRight"].Lit = true;
-                break;
-        }
+        Sprites["Sheriff" + (char)Position].Lit = true;
     }
 
     private void ManageInputs()
