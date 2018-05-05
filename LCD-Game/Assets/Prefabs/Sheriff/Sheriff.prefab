@@ -178,6 +178,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxBullets: 6
+  moveSoundName: beep
+  shootSoundName: shoot
 --- !u!212 &212383442442665642
 SpriteRenderer:
   m_ObjectHideFlags: 1

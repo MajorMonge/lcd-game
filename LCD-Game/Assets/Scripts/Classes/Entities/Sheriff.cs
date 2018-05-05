@@ -41,6 +41,9 @@ public class Sheriff : LCDGameObject {
         }
     }
 
+    public string moveSoundName;
+    public string shootSoundName;
+
 	// Use this for initialization
 	new void Start () {
         base.Start();
@@ -56,12 +59,14 @@ public class Sheriff : LCDGameObject {
         if (Position == Position.MIDDLE)
         {
             Position = Position.LEFT;
+            SoundManager.Instance.PlaySound(moveSoundName);
             return;
         }
         
         if (Position == Position.RIGHT)
         {
             Position = Position.MIDDLE;
+            SoundManager.Instance.PlaySound(moveSoundName);
         }
     }
 
@@ -70,12 +75,14 @@ public class Sheriff : LCDGameObject {
         if (Position == Position.MIDDLE)
         {
             Position = Position.RIGHT;
+            SoundManager.Instance.PlaySound(moveSoundName);
             return;
         }
 
         if (Position == Position.LEFT)
         {
             Position = Position.MIDDLE;
+            SoundManager.Instance.PlaySound(moveSoundName);
         }
     }
 
