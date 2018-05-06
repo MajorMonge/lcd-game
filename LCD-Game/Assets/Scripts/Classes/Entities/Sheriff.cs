@@ -15,10 +15,37 @@ public class Sheriff : LCDGameObject {
         {
             _position = value;
             ManageGraphics();
+            
+            if (PositionHasChanged != null)
+            {
+                PositionHasChanged(this);
+            }
         }
     }
 
+    public delegate void SheriffDelegate(Sheriff sheriff);
+    public event SheriffDelegate PositionHasChanged;
+    public event SheriffDelegate BulletCountHasChanged;
+    public event SheriffDelegate IsInPanic;
+
     public int maxBullets = 6;
+    private bool _panic = false;
+    public bool Panic
+    {
+        get
+        {
+            return _panic;
+        }
+        set
+        {
+            _panic = value;
+            
+            if (IsInPanic != null)
+            {
+                IsInPanic(this);
+            }
+        }
+    }
 
     private int _bullets;
     public int Bullets
@@ -29,15 +56,19 @@ public class Sheriff : LCDGameObject {
         }
         set
         {
-            if (value < 0)
+            value = Mathf.Clamp(value, 0, maxBullets);
+
+            if (value != _bullets && BulletCountHasChanged != null)
             {
-                //Warn player to reload
+                BulletCountHasChanged(this);
             }
 
-            if (value <= maxBullets)
+            if (value == 0)
             {
-                _bullets = value;
+                Panic = true;
             }
+
+            _bullets = value;
         }
     }
 
@@ -88,7 +119,7 @@ public class Sheriff : LCDGameObject {
 
     private void Fire()
     {
-
+        //pewpewpew
     }
 
     private void ManageGraphics()
