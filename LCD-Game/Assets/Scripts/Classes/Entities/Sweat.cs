@@ -30,14 +30,14 @@ public class Sweat : LCDGameObject {
     {
         StopAllCoroutines();
 
-        if (sheriff.Panic == false)
-        {
-            return;
-        }
-
         foreach (var drop in Sprites.Values)
         {
             drop.Lit = false;
+        }
+
+        if (sheriff.Panic == false)
+        {
+            return;
         }
 
         if (name == "SweatDrops" + (char)sheriff.Position)
@@ -51,5 +51,14 @@ public class Sweat : LCDGameObject {
         base.Start();
         _sheriff = FindObjectOfType<Sheriff>();
         _sheriff.PositionHasChanged += DisplaySweat;
+        _sheriff.IsInPanic += DisplaySweat;
+    }
+
+    public override void Reset()
+    {
+        foreach (var sprite in Sprites.Values)
+        {
+            sprite.Lit = false;
+        }
     }
 }

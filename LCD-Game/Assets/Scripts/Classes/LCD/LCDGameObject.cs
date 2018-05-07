@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LCDGameObject : MonoBehaviour {
+public abstract class LCDGameObject : MonoBehaviour {
 
     public Dictionary<string, LCDSprite> Sprites;
 
@@ -14,4 +14,6 @@ public class LCDGameObject : MonoBehaviour {
             Sprites.Add(sprite.name, sprite);
         }
 	}
+
+    public abstract void Reset();
 }

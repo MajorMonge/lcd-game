@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Sheriff : LCDGameObject {
+public class Sheriff : LCDGameObject
+{
 
-    private Position _position = Position.MIDDLE;
+    private Position _position;
     public Position Position
     {
         get
@@ -13,9 +14,14 @@ public class Sheriff : LCDGameObject {
         }
         set
         {
+            if (FromToPositionChanged != null)
+            {
+                FromToPositionChanged(_position, value);
+            }
+
             _position = value;
             ManageGraphics();
-            
+
             if (PositionHasChanged != null)
             {
                 PositionHasChanged(this);
@@ -24,9 +30,14 @@ public class Sheriff : LCDGameObject {
     }
 
     public delegate void SheriffDelegate(Sheriff sheriff);
+    public delegate void SheriffComparePositionDelegate(Position oldPos, Position newPos);
     public event SheriffDelegate PositionHasChanged;
+    public event SheriffComparePositionDelegate FromToPositionChanged;
     public event SheriffDelegate BulletCountHasChanged;
     public event SheriffDelegate IsInPanic;
+    public event SheriffDelegate ScoreHasChanged;
+    public event SheriffDelegate LivesHasChanged;
+    public event SheriffDelegate HasFired;
 
     public int maxBullets = 6;
     private bool _panic = false;
@@ -39,13 +50,55 @@ public class Sheriff : LCDGameObject {
         set
         {
             _panic = value;
-            
+
             if (IsInPanic != null)
             {
                 IsInPanic(this);
             }
         }
     }
+
+    private int _score = 0;
+    public int Score
+    {
+        get
+        {
+            return _score;
+        }
+        set
+        {
+            value = Mathf.Clamp(value, 0, int.MaxValue);
+
+            _score = value;
+
+            if (ScoreHasChanged != null)
+            {
+                ScoreHasChanged(this);
+            }
+        }
+    }
+
+    private int _lives;
+    public int Lives
+    {
+        get
+        {
+            return _lives;
+        }
+        set
+        {
+            value = Mathf.Clamp(value, 0, 3);
+
+            bool changed = (value != _lives && LivesHasChanged != null) ? true : false;
+
+            _lives = value;
+
+            if (changed) LivesHasChanged(this);
+        }
+    }
+
+    private bool isReloading = false;
+    private bool lockHorizontal = false;
 
     private int _bullets;
     public int Bullets
@@ -56,11 +109,12 @@ public class Sheriff : LCDGameObject {
         }
         set
         {
+            bool changed = false;
             value = Mathf.Clamp(value, 0, maxBullets);
 
             if (value != _bullets && BulletCountHasChanged != null)
             {
-                BulletCountHasChanged(this);
+                changed = true;
             }
 
             if (value == 0)
@@ -69,21 +123,32 @@ public class Sheriff : LCDGameObject {
             }
 
             _bullets = value;
+
+            if (changed)
+            {
+                BulletCountHasChanged(this);
+            }
         }
     }
 
     public string moveSoundName;
     public string shootSoundName;
+    public string reloadSoundName;
+    public string damagedSoundName;
 
-	// Use this for initialization
-	new void Start () {
+    // Use this for initialization
+    new void Start()
+    {
         base.Start();
         Position = Position.MIDDLE;
-	}
-	
-	void Update () {
+        Bullets = maxBullets;
+        Lives = 3;
+    }
+
+    void Update()
+    {
         ManageInputs();
-	}
+    }
 
     private void MoveLeft()
     {
@@ -93,7 +158,7 @@ public class Sheriff : LCDGameObject {
             SoundManager.Instance.PlaySound(moveSoundName);
             return;
         }
-        
+
         if (Position == Position.RIGHT)
         {
             Position = Position.MIDDLE;
@@ -119,7 +184,24 @@ public class Sheriff : LCDGameObject {
 
     private void Fire()
     {
-        //pewpewpew
+        SoundManager.Instance.PlaySound(shootSoundName);
+        Bullets -= 1;
+
+        if (HasFired != null)
+            HasFired(this);
+    }
+
+    private IEnumerator Reload()
+    {
+        while (Bullets < maxBullets)
+        {
+            Bullets += 1;
+            SoundManager.Instance.PlaySound(reloadSoundName);
+
+            if (Bullets != maxBullets)
+                yield return new WaitForSeconds(0.33f);
+        }
+        isReloading = false;
     }
 
     private void ManageGraphics()
@@ -134,26 +216,53 @@ public class Sheriff : LCDGameObject {
 
     private void ManageInputs()
     {
-        float axisH = 0;
-
-        if (Input.GetButtonDown("Horizontal"))
+        if (Time.timeScale != 0)
         {
-            axisH = Input.GetAxisRaw("Horizontal");
-        }
+            if (Input.GetAxisRaw("Horizontal") == 0)
+            {
+                lockHorizontal = false;
+            }
 
-        if (axisH < 0f)
-        {
-            MoveLeft();
-        }
+            if (Input.GetAxisRaw("Horizontal") < 0 && !lockHorizontal)
+            {
+                lockHorizontal = true;
+                MoveLeft();
+            }
 
-        if (axisH > 0f)
-        {
-            MoveRight();
-        }
+            if (Input.GetAxisRaw("Horizontal") > 0 && !lockHorizontal)
+            {
+                lockHorizontal = true;
+                MoveRight();
+            }
 
-        if (Input.GetButtonDown("Fire1"))
-        {
-            Fire();
+            if (Input.GetButtonDown("Fire2") && !isReloading && Bullets > 0)
+            {
+                Fire();
+            }
+
+            if (Input.GetButtonDown("Fire1") && !isReloading)
+            {
+                if (Bullets == 0)
+                {
+                    Panic = false;
+                }
+                isReloading = true;
+                StartCoroutine("Reload");
+            }
         }
+    }
+
+    public void TakeDamage()
+    {
+        SoundManager.Instance.PlaySound(damagedSoundName);
+        Lives -= 1;
+    }
+
+    public override void Reset()
+    {
+        Position = Position.MIDDLE;
+        Bullets = maxBullets;
+        Lives = 3;
+        Score = 0;
     }
 }

@@ -34,19 +34,26 @@ public class Console : MonoBehaviour
         {
             if (Array.Exists(directions, x => x == input.consoleButton))
             {
-                if (Input.GetAxisRaw("Horizontal") > 0)
+                float axisH = 0;
+
+                if (Input.GetButton("Horizontal") || Input.GetAxisRaw("Horizontal") != 0)
+                {
+                    axisH = Input.GetAxisRaw("Horizontal");
+                }
+
+                if (axisH > 0)
                 {
                     PressButton("Right");
                     ReleaseButton("Left");
                 }
 
-                if (Input.GetAxisRaw("Horizontal") < 0)
+                if (axisH < 0)
                 {
                     PressButton("Left");
                     ReleaseButton("Right");
                 }
 
-                if (Input.GetAxisRaw("Horizontal") == 0)
+                if (axisH == 0)
                 {
                     ReleaseButton("Right");
                     ReleaseButton("Left");
